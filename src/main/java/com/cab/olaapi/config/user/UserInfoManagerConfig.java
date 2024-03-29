@@ -1,21 +1,25 @@
-package com.cab.olaapi.config.userConfig;
+package com.cab.olaapi.config.user;
 
-import com.cab.olaapi.repository.UserRepository;
+import com.cab.olaapi.repo.UserInfoRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author Bipro
+ */
 @Service
 @RequiredArgsConstructor
-public class UserDetailsConfig implements UserDetailsService {
-    private final UserRepository userRepository;
+public class UserInfoManagerConfig implements UserDetailsService {
+
+    private final UserInfoRepo userInfoRepo;
     @Override
     public UserDetails loadUserByUsername(String emailId) throws UsernameNotFoundException {
-        return userRepository
+        return userInfoRepo
                 .findByEmailId(emailId)
-                .map(UserConfig::new)
-                .orElseThrow(()->new UsernameNotFoundException("User is not found by "+emailId));
+                .map(UserInfoConfig::new)
+                .orElseThrow(()-> new UsernameNotFoundException("UserEmail: "+emailId+" does not exist"));
     }
 }

@@ -1,7 +1,8 @@
 package com.cab.olaapi.config.jwtAuth;
 
-import com.cab.olaapi.config.userConfig.UserConfig;
-import com.cab.olaapi.repository.UserRepository;
+
+import com.cab.olaapi.config.user.UserInfoConfig;
+import com.cab.olaapi.repo.UserInfoRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,8 +12,11 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.Objects;
 
-@RequiredArgsConstructor
+/**
+ * @author Bipro
+ */
 @Component
+@RequiredArgsConstructor
 public class JwtTokenUtils {
 
     public String getUserName(Jwt jwtToken){
@@ -21,21 +25,21 @@ public class JwtTokenUtils {
 
     public boolean isTokenValid(Jwt jwtToken, UserDetails userDetails){
         final String userName = getUserName(jwtToken);
-        boolean isTokenExpired = getTokenExpired(jwtToken);
-        boolean isTokenUserSameAsDatabse = userName.equals(userDetails.getUsername());
-        return !isTokenExpired && isTokenUserSameAsDatabse;
+        boolean isTokenExpired = getIfTokenIsExpired(jwtToken);
+        boolean isTokenUserSameAsDatabase = userName.equals(userDetails.getUsername());
+        return !isTokenExpired  && isTokenUserSameAsDatabase;
+
     }
 
-    private boolean getTokenExpired(Jwt jwtToken) {
+    private boolean getIfTokenIsExpired(Jwt jwtToken) {
         return Objects.requireNonNull(jwtToken.getExpiresAt()).isBefore(Instant.now());
     }
 
-    private final UserRepository userRepository;
+    private final UserInfoRepo useruserInfoRepo;
     public UserDetails userDetails(String emailId){
-        return userRepository
+        return useruserInfoRepo
                 .findByEmailId(emailId)
-                .map(UserConfig::new)
-                .orElseThrow(()->new UsernameNotFoundException("UserEmail: "+emailId+" does not exist"));
+                .map(UserInfoConfig::new)
+                .orElseThrow(()-> new UsernameNotFoundException("UserEmail: "+emailId+" does not exist"));
     }
-
 }

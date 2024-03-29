@@ -1,5 +1,8 @@
 package com.cab.olaapi.config.jwtAuth;
 
+/**
+ * @author Bipro
+ */
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -21,58 +24,63 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JwtTokenGenerator {
 
+
     private final JwtEncoder jwtEncoder;
 
-    public String generateAccessToken(Authentication authentication){
-        log.info("[JwtTokenGenerator:generateAccessToken] Token Creation started for:{}",authentication.getName());
+    public String generateAccessToken(Authentication authentication) {
+
+        log.info("[JwtTokenGenerator:generateAccessToken] Token Creation Started for:{}", authentication.getName());
+
         String roles = getRolesOfUser(authentication);
 
         String permissions = getPermissionsFromRoles(roles);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("bipro")
+                .issuer("Bipro")
                 .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+                .expiresAt(Instant.now().plus(15 , ChronoUnit.MINUTES))
                 .subject(authentication.getName())
-                .claim("scope",permissions)
+                .claim("scope", permissions)
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    public String generateRefreshToken(Authentication authentication){
-        log.info("[JwtTokenGenerator:generateRefreshToken] Token Creation started for:{}",authentication.getName());
 
+    public String generateRefreshToken(Authentication authentication) {
+
+        log.info("[JwtTokenGenerator:generateRefreshToken] Token Creation Started for:{}", authentication.getName());
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("bipro")
                 .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plus(15, ChronoUnit.DAYS))
+                .expiresAt(Instant.now().plus(15 , ChronoUnit.DAYS))
                 .subject(authentication.getName())
-                .claim("scope","REFRESH_TOKEN")
+                .claim("scope", "REFRESH_TOKEN")
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
-
-    private String getPermissionsFromRoles(String roles) {
-        Set<String> permissions = new HashSet<>();
-        if(roles.contains("ROLE_ADMIN")){
-            permissions.addAll(List.of("READ","WRITE","DELETE"));
-        }
-        if(roles.contains("ROLE_MANAGER")){
-            permissions.add("READ");
-        }
-        if(roles.contains("ROLE_USER")){
-            permissions.add("READ");
-        }
-        return String.join(" ",permissions);
-
-    }
-
-    private String getRolesOfUser(Authentication authentication) {
+    private static String getRolesOfUser(Authentication authentication) {
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));
     }
+
+    private String getPermissionsFromRoles(String roles) {
+        Set<String> permissions = new HashSet<>();
+
+        if (roles.contains("ROLE_ADMIN")) {
+            permissions.addAll(List.of("READ", "WRITE", "DELETE"));
+        }
+        if (roles.contains("ROLE_MANAGER")) {
+            permissions.add("READ");
+        }
+        if (roles.contains("ROLE_USER")) {
+            permissions.add("READ");
+        }
+
+        return String.join(" ", permissions);
+    }
+
 }

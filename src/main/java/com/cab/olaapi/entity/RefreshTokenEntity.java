@@ -1,22 +1,27 @@
 package com.cab.olaapi.entity;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author Bipro
+ */
 @Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "REFRESH_TOKEN")
-public class RefreshToken {
+@Table(name="REFRESH_TOKENS")
+public class RefreshTokenEntity {
+
     @Id
     @GeneratedValue
     private Long id;
-
-    @Column(name = "REFRESH_TOKEN",nullable = false,length = 1000)
+    // Increase the length to a value that can accommodate your actual token lengths
+    @Column(name = "REFRESH_TOKEN", nullable = false, length = 10000)
     private String refreshToken;
 
     @Column(name = "REVOKED")
@@ -24,5 +29,6 @@ public class RefreshToken {
 
     @ManyToOne
     @JoinColumn(name = "user_id",referencedColumnName = "id")
-    private User user;
+    private UserInfoEntity user;
+
 }

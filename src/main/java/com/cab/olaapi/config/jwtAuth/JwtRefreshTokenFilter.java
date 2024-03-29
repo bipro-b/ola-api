@@ -1,8 +1,7 @@
 package com.cab.olaapi.config.jwtAuth;
 
 import com.cab.olaapi.config.RSAKeyRecord;
-import com.cab.olaapi.config.userConfig.UserDetailsConfig;
-import com.cab.olaapi.repository.RefreshTokenRepository;
+import com.cab.olaapi.repo.RefreshTokenRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,46 +24,52 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
+/**
+ * @author Bipro
+ */
 @RequiredArgsConstructor
 @Slf4j
 public class JwtRefreshTokenFilter extends OncePerRequestFilter {
 
-    private final RSAKeyRecord rsaKeyRecord;
+    private  final RSAKeyRecord rsaKeyRecord;
     private final JwtTokenUtils jwtTokenUtils;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepo refreshTokenRepo;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         try {
             log.info("[JwtRefreshTokenFilter:doFilterInternal] :: Started ");
 
             log.info("[JwtRefreshTokenFilter:doFilterInternal]Filtering the Http Request:{}", request.getRequestURI());
 
+
             final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
             JwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(rsaKeyRecord.rsaPublicKey()).build();
 
-            if(!authHeader.startsWith("Bearer")){
-                filterChain.doFilter(request,response);
+            if (!authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
                 return;
             }
 
             final String token = authHeader.substring(7);
             final Jwt jwtRefreshToken = jwtDecoder.decode(token);
 
+
             final String userName = jwtTokenUtils.getUserName(jwtRefreshToken);
 
-            if(!userName.isEmpty()&& SecurityContextHolder.getContext().getAuthentication()==null){
-                var isRefreshTokenValidInDatabse = refreshTokenRepository.findByRefreshToken(jwtRefreshToken.getTokenValue())
-                        .map(refreshToken -> !refreshToken.isRevoked())
+
+            if (!userName.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
+                //Check if refreshToken isPresent in database and is valid
+                var isRefreshTokenValidInDatabase = refreshTokenRepo.findByRefreshToken(jwtRefreshToken.getTokenValue())
+                        .map(refreshTokenEntity -> !refreshTokenEntity.isRevoked())
                         .orElse(false);
 
                 UserDetails userDetails = jwtTokenUtils.userDetails(userName);
-
-                if(jwtTokenUtils.isTokenValid(jwtRefreshToken,userDetails)&& isRefreshTokenValidInDatabse){
+                if (jwtTokenUtils.isTokenValid(jwtRefreshToken, userDetails) && isRefreshTokenValidInDatabase) {
                     SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
 
                     UsernamePasswordAuthenticationToken createdToken = new UsernamePasswordAuthenticationToken(
@@ -79,12 +84,10 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
                 }
             }
             log.info("[JwtRefreshTokenFilter:doFilterInternal] Completed");
-            filterChain.doFilter(request,response);
-        } catch (JwtValidationException jwtValidationException){
+            filterChain.doFilter(request, response);
+        }catch (JwtValidationException jwtValidationException){
             log.error("[JwtRefreshTokenFilter:doFilterInternal] Exception due to :{}",jwtValidationException.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,jwtValidationException.getMessage());
-
         }
-
     }
 }

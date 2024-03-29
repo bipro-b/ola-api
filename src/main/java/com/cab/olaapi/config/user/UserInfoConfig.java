@@ -1,6 +1,6 @@
-package com.cab.olaapi.config.userConfig;
+package com.cab.olaapi.config.user;
 
-import com.cab.olaapi.entity.User;
+import com.cab.olaapi.entity.UserInfoEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,15 +9,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Arrays;
 import java.util.Collection;
 
+/**
+ * @author Bipro
+ */
 @RequiredArgsConstructor
-public class UserConfig implements UserDetails {
-
-    private final User user;
-
+public class UserInfoConfig implements UserDetails {
+    private final UserInfoEntity userInfoEntity;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Arrays
-                .stream(user.getRoles()
+                .stream(userInfoEntity
+                        .getRoles()
                         .split(","))
                 .map(SimpleGrantedAuthority::new)
                 .toList();
@@ -25,12 +27,12 @@ public class UserConfig implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return userInfoEntity.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getUserName();
+        return userInfoEntity.getEmailId();
     }
 
     @Override
